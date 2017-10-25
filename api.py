@@ -41,8 +41,10 @@ class Warble_model (db.Model):
 
 Favorites= db.Table("favorites",
   db.Column('id', db.Integer, primary_key=True),
-  db.Column(db.Integer, db.ForeignKey('users.id', ondelete='cascade') ),
-  db.Column(db.Integer, db.ForeignKey('warbles.id', ondelete='cascade')  )
+  db.Column('user_id', db.Integer, db.ForeignKey('users.id', ondelete='cascade') ),
+  db.Column('warble_id', db.Integer, db.ForeignKey('warbles.id', ondelete='cascade')
+
+    )
 )
 
 
