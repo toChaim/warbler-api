@@ -39,7 +39,13 @@ class Warble_model (db.Model):
   def __repr__(self):
     return "<username:{} text:{}>".format(self.author.user_name, self.text)
 
-    
+Favorites= db.Table("favorites",
+  db.Column('id', db.Integer, primary_key=True),
+  db.Column(db.Integer, db.ForeignKey('users.id', ondelete='cascade') ),
+  db.Column(db.Integer, db.ForeignKey('warbles.id', ondelete='cascade')  )
+)
+
+
 
 
 warbles = {}
