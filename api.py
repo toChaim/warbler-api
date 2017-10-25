@@ -1,5 +1,5 @@
 from flask import Flask, request
-from flask_restful import Resource, Api
+from flask_restful import Resource, Api, fields, marshal
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -22,7 +22,7 @@ class User_model (db.Model):
         self.password = password
 
   def __repr__(self):
-    return "<{user_name}>".format(self.user_name)
+    return "<{}>".format(self.user_name)
 
 warbles = {}
 favorites = {}
@@ -37,13 +37,17 @@ class Users(Resource):
     return User_model.query.all()
 
   def post(self):
-    from IPython import embed; embed()
-    data = request.form['data']
-    user = User_model(data.user_name, data.password)
+    data = request.form
+    user = User_model(data['user_name'], data['password'])
     db.session.add(user)
     db.session.commit()
-    # users[user_id] = request.form['data']
-    return user
+    resource_fields = {
+                    'id': fields.Integer,
+                    'password': fields.String,
+                    'user_name': fields.String
+                }
+    #from IPython import embed; embed()
+    return marshal(user, resource_fields)
 
 class Warble(Resource):
   def get(self, warble_id):
