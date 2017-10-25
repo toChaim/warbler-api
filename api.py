@@ -36,7 +36,7 @@ class Users(Resource):
   def get(self):
     return User_model.query.all()
 
-  def put(self, user_id):
+  def post(self):
     from IPython import embed; embed()
     data = request.form['data']
     user = User_model(data.user_name, data.password)
