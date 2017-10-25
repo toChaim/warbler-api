@@ -16,13 +16,31 @@ class User_model (db.Model):
   id = db.Column('id', db.Integer, primary_key=True)
   user_name = db.Column('user_name', db.Text, unique=True )
   password = db.Column('password', db.Text)
+  warbles=db.relationship('Warble_model', backref='author')
 
   def __init__(self, user_name, password):
         self.user_name = user_name
         self.password = password
 
   def __repr__(self):
-    return "<{}>".format(self.user_name)
+    return "<user:{}>".format(self.user_name)
+
+class Warble_model (db.Model):
+  __tablename__ = "warbles"
+
+  id=db.Column('id', db.Integer, primary_key=True)
+  text=db.Column('text', db.String(120))
+  user_id=db.Column(db.Integer, db.ForeignKey('users.id') )
+
+  def __init__(self, text, user_id):
+    self.text = text
+    self.user_id = user_id
+
+  def __repr__(self):
+    return "<username:{} text:{}>".format(self.author.user_name, self.text)
+
+    
+
 
 warbles = {}
 favorites = {}
