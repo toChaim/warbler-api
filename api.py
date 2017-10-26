@@ -16,8 +16,6 @@ Favorites= db.Table("favorites",
   db.Column('warble_id', db.Integer, db.ForeignKey('warbles.id', ondelete='cascade'))
   )
 
-
-
 Followers= db.Table("followers",
   db.Column('id', db.Integer, primary_key=True),
   db.Column('user_id', db.Integer, db.ForeignKey('users.id', ondelete='cascade') ),
@@ -31,8 +29,8 @@ class User_model (db.Model):
   user_name = db.Column('user_name', db.Text, unique=True )
   password = db.Column('password', db.Text)
   warbles=db.relationship('Warble_model', backref='author')
-  follows=db.relationship('follows', secondary=Followers, primaryjoin=id==Followers.c.follower_id, secondaryjoin=Followers.c.user_id)
-  followers=db.relationship('followers', secondary=Followers, primaryjoin=id==Followers.c.user_id, secondaryjoin=Followers.c.follower_id)
+  follows=db.relationship('User_model', secondary=Followers, primaryjoin=id==Followers.c.follower_id, secondaryjoin=id==Followers.c.user_id)
+  followers=db.relationship('User_model', secondary=Followers, primaryjoin=id==Followers.c.user_id, secondaryjoin=id==Followers.c.follower_id)
 
   def __init__(self, user_name, password):
         self.user_name = user_name
@@ -55,13 +53,6 @@ class Warble_model (db.Model):
   def __repr__(self):
     return "<username:{} text:{}>".format(self.author.user_name, self.text)
 
-
-
-
-
-
-
-
 warbles = {}
 favorites = {}
 
@@ -72,7 +63,13 @@ class User(Resource):
 
 class Users(Resource):
   def get(self):
-    return User_model.query.all()
+    resource_fields = {
+                    'id': fields.Integer,
+                    'password': fields.String,
+                    'user_name': fields.String
+                }
+    # from IPython import embed; embed()
+    return marshal(User_model.query.all(), resource_fields)
 
   def post(self):
     data = request.form
@@ -94,9 +91,24 @@ class Warble(Resource):
   def put(self, warble_id):
     warbles[warble_id] = request.form['data']
 
+class Follow(Resource):
+  def post(self, user_id):
+    data = request.form
+    user = User_model.query.get(user_id)
+    user.followers.append(User_model.query.get(data['follower']))
+    db.session.add(user)
+    db.session.commit()
+    resource_fields = {
+                    'id': fields.Integer,
+                    'password': fields.String,
+                    'user_name': fields.String
+                }
+    return marshal(user, resource_fields)
+
 #routes
 api.add_resource(User, '/users/<string:user_id>')
 api.add_resource(Users, '/users/')
+api.add_resource(Follow, '/users/<string:user_id>/followers')
 
 if __name__ == '__main__':
   app.run(debug=True)
