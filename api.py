@@ -10,6 +10,20 @@ db = SQLAlchemy(app)
 
 # tables
 # users = {'Chaim':{'user_name': 'me'}, 'Sarah':{'user_name': 'you'}}
+Favorites= db.Table("favorites",
+  db.Column('id', db.Integer, primary_key=True),
+  db.Column('user_id', db.Integer, db.ForeignKey('users.id', ondelete='cascade') ),
+  db.Column('warble_id', db.Integer, db.ForeignKey('warbles.id', ondelete='cascade'))
+  )
+
+db.Index('constraint', Favorites.c.user_id, Favorites.c.warble_id, unique=True)
+
+Followers= db.Table("followers",
+  db.Column('id', db.Integer, primary_key=True),
+  db.Column('user_id', db.Integer, db.ForeignKey('users.id', ondelete='cascade') ),
+  db.Column('follower_id', db.Integer, db.ForeignKey('users.id', ondelete='cascade'))
+)
+
 class User_model (db.Model):
   __tablename__ = "users"
 
@@ -17,7 +31,7 @@ class User_model (db.Model):
   user_name = db.Column('user_name', db.Text, unique=True )
   password = db.Column('password', db.Text)
   warbles=db.relationship('Warble_model', backref='author')
-
+  follows=db.relationship('follows', secondary=Followers, primaryjoin=id==Followers.c.follower_id, secondaryjoin=Followers.c.user_id)
   def __init__(self, user_name, password):
         self.user_name = user_name
         self.password = password
@@ -39,17 +53,7 @@ class Warble_model (db.Model):
   def __repr__(self):
     return "<username:{} text:{}>".format(self.author.user_name, self.text)
 
-Favorites= db.Table("favorites",
-  db.Column('id', db.Integer, primary_key=True),
-  db.Column('user_id', db.Integer, db.ForeignKey('users.id', ondelete='cascade') ),
-  db.Column('warble_id', db.Integer, db.ForeignKey('warbles.id', ondelete='cascade'))
-)
 
-Followers= db.Table("followers",
-  db.Column('id', db.Integer, primary_key=True),
-  db.Column('user_id', db.Integer, db.ForeignKey('users.id', ondelete='cascade') ),
-  db.Column('follow_id', db.Integer, db.ForeignKey('users.id', ondelete='cascade'))
-)
 
 
 
