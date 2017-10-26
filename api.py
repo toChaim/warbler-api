@@ -8,6 +8,13 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 api = Api(app)
 db = SQLAlchemy(app)
 
+# marshal with fields
+user_fields = {
+                    'id': fields.Integer,
+                    'password': fields.String,
+                    'user_name': fields.String
+                }
+
 # tables
 # users = {'Chaim':{'user_name': 'me'}, 'Sarah':{'user_name': 'you'}}
 Favorites= db.Table("favorites",
@@ -62,27 +69,15 @@ class User(Resource):
     return {user_id: User_model.query.get(user_id)}
 
 class Users(Resource):
-  def get(self):
-    resource_fields = {
-                    'id': fields.Integer,
-                    'password': fields.String,
-                    'user_name': fields.String
-                }
-    # from IPython import embed; embed()
-    return marshal(User_model.query.all(), resource_fields)
+  def get(self):             
+    return marshal(User_model.query.all(), user_fields)
 
   def post(self):
     data = request.form
     user = User_model(data['user_name'], data['password'])
     db.session.add(user)
     db.session.commit()
-    resource_fields = {
-                    'id': fields.Integer,
-                    'password': fields.String,
-                    'user_name': fields.String
-                }
-    #from IPython import embed; embed()
-    return marshal(user, resource_fields)
+    return marshal(user, user_fields)
 
 class Warble(Resource):
   def get(self, warble_id):
@@ -98,12 +93,7 @@ class Follow(Resource):
     user.followers.append(User_model.query.get(data['follower']))
     db.session.add(user)
     db.session.commit()
-    resource_fields = {
-                    'id': fields.Integer,
-                    'password': fields.String,
-                    'user_name': fields.String
-                }
-    return marshal(user, resource_fields)
+    return marshal(user, user_fields)
 
 #routes
 api.add_resource(User, '/users/<string:user_id>')
