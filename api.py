@@ -10,15 +10,11 @@ db = SQLAlchemy(app)
 
 # marshal with fields
 user_fields = {
-  'user_name': fields.String
-  }
-user_fields.update({
+  'user_name': fields.String,
+  'warbles': fields.List(fields.Nested({'text': fields.String})),
   'follows': fields.List(fields.Nested({'user_name': fields.String})), 
   'followers': fields.List(fields.Nested({'user_name': fields.String}))
- })
-
-
-
+  }
 
 # tables
 # users = {'Chaim':{'user_name': 'me'}, 'Sarah':{'user_name': 'you'}}
