@@ -10,17 +10,13 @@ db = SQLAlchemy(app)
 
 # marshal with fields
 user_fields = {
-  'id': fields.Integer,
-  'password': fields.String,
   'user_name': fields.String
-                    
+  }
+user_fields.update({
+  'follows': fields.List(fields.Nested({'user_name': fields.String})), 
+  'followers': fields.List(fields.Nested({'user_name': fields.String}))
+ })
 
-                }
-user_list_fields = {
-  
-}
-user_all_the_fields = user_fields.copy()
-user_all_the_fields.update({'follows': fields.List(fields.Nested(user_fields))})
 
 
 
@@ -75,11 +71,11 @@ favorites = {}
 # modles
 class User(Resource):
   def get(self, user_id):
-    return {user_id: User_model.query.get(user_id)}
+    return marshal(User_model.query.get(user_id),user_fields)
 
 class Users(Resource):
   def get(self):             
-    return marshal(User_model.query.all(), user_all_the_fields)
+    return marshal(User_model.query.all(), user_fields)
 
   def post(self):
     data = request.form
