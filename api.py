@@ -8,6 +8,14 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 api = Api(app)
 db = SQLAlchemy(app)
 
+# marshal with fields
+user_fields = {
+  'user_name': fields.String,
+  'warbles': fields.List(fields.Nested({'text': fields.String})),
+  'follows': fields.List(fields.Nested({'user_name': fields.String})), 
+  'followers': fields.List(fields.Nested({'user_name': fields.String}))
+  }
+
 # tables
 # users = {'Chaim':{'user_name': 'me'}, 'Sarah':{'user_name': 'you'}}
 Favorites= db.Table("favorites",
@@ -53,43 +61,35 @@ class Warble_model (db.Model):
   def __repr__(self):
     return "<username:{} text:{}>".format(self.author.user_name, self.text)
 
-warbles = {}
 favorites = {}
 
 # modles
 class User(Resource):
   def get(self, user_id):
-    return {user_id: User_model.query.get(user_id)}
+    return marshal(User_model.query.get(user_id),user_fields)
 
 class Users(Resource):
-  def get(self):
-    resource_fields = {
-                    'id': fields.Integer,
-                    'password': fields.String,
-                    'user_name': fields.String
-                }
-    # from IPython import embed; embed()
-    return marshal(User_model.query.all(), resource_fields)
+  def get(self):             
+    return marshal(User_model.query.all(), user_fields)
 
   def post(self):
     data = request.form
     user = User_model(data['user_name'], data['password'])
     db.session.add(user)
     db.session.commit()
-    resource_fields = {
-                    'id': fields.Integer,
-                    'password': fields.String,
-                    'user_name': fields.String
-                }
-    #from IPython import embed; embed()
-    return marshal(user, resource_fields)
+    return marshal(user, user_fields)
 
 class Warble(Resource):
-  def get(self, warble_id):
-    return {warble_id: warbles[warble_id]}
+  def get(self, user_id):
+    return marshal(User_model.query.get(user_id), {'warbles': fields.List(fields.Nested({'text': fields.String}))})
 
-  def put(self, warble_id):
-    warbles[warble_id] = request.form['data']
+  def post(self, user_id):
+    data = request.form
+    warble = Warble_model(data['text'], user_id)
+    db.session.add(warble)
+    db.session.commit()
+    return marshal(warble, {'text': fields.String})
+
 
 class Follow(Resource):
   def post(self, user_id):
@@ -98,17 +98,13 @@ class Follow(Resource):
     user.followers.append(User_model.query.get(data['follower']))
     db.session.add(user)
     db.session.commit()
-    resource_fields = {
-                    'id': fields.Integer,
-                    'password': fields.String,
-                    'user_name': fields.String
-                }
-    return marshal(user, resource_fields)
+    return marshal(user, user_fields)
 
 #routes
 api.add_resource(User, '/users/<string:user_id>')
 api.add_resource(Users, '/users/')
 api.add_resource(Follow, '/users/<string:user_id>/followers')
+api.add_resource(Warble, '/users/<string:user_id>/warbles')
 
 if __name__ == '__main__':
   app.run(debug=True)
